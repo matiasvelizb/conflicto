@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DiscordModule } from './discord/discord.module';
+import { WebhookModule } from './webhook/webhook.module';
 import settings from './config/settings';
 @Module({
   imports: [
@@ -9,6 +10,7 @@ import settings from './config/settings';
       isGlobal: true,
     }),
     DiscordModule,
+    WebhookModule,
   ],
   controllers: [],
   providers: [],
