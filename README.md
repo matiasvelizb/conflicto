@@ -1,5 +1,9 @@
 # Conflicto - Bitbucket Webhooks to Discord
 
+<p align="center">
+  <img src="assets/conflicto.png" alt="App Icon" width="75">
+</p>
+
 Conflicto is a NestJS-based webhook handler that listens to Bitbucket events and forwards relevant updates to a Discord channel. It currently supports:
 
 - Detecting **new pull requests**.
