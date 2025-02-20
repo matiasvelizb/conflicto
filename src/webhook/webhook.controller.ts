@@ -1,67 +1,32 @@
 import {
   Body,
   Controller,
-  Get,
   Headers,
-  HttpException,
-  HttpStatus,
   Logger,
   Post,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { WebhookSignatureGuard } from './guards/webhook-signature.guard';
 import { WebhookService } from './webhook.service';
-import { BitbucketWebhookPayload } from './interfaces/bitbucket-payload.interface';
-import * as crypto from 'crypto';
+import { BitbucketWebhookDto } from './dtos/webhook.dto';
 
 @Controller('webhook')
+@UseGuards(WebhookSignatureGuard)
+@UsePipes(new ValidationPipe({ transform: true }))
 export class WebhookController {
   private readonly logger = new Logger(WebhookController.name);
 
-  constructor(
-    private readonly webhookService: WebhookService,
-    private readonly configService: ConfigService,
-  ) {}
-
-  @Get('test')
-  test() {
-    return 'Hello world!';
-  }
+  constructor(private readonly webhookService: WebhookService) {}
 
   @Post('bitbucket')
   async handleWebhook(
     @Headers('x-event-key') eventKey: string,
-    @Headers('x-hub-signature') signature: string,
-    @Body() payload: BitbucketWebhookPayload,
+    @Body() payload: BitbucketWebhookDto,
   ) {
-    const secret = this.configService.get<string>('webhook.secret');
-
-    if (!secret) {
-      throw new HttpException(
-        'No webhook secret configured',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    const computedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(JSON.stringify(payload))
-      .digest('hex');
-
-    if (`sha256=${computedSignature}` !== signature) {
-      throw new HttpException('Invalid signature', HttpStatus.UNAUTHORIZED);
-    }
-
-    switch (eventKey) {
-      case 'pullrequest:created':
-        await this.webhookService.handlePullRequestCreated(payload);
-        break;
-      case 'pullrequest:updated':
-        await this.webhookService.handlePullRequestUpdated(payload);
-        break;
-      default:
-        this.logger.warn(`Unhandled event key: ${eventKey}`);
-    }
-
+    this.logger.log(`Received Bitbucket webhook event: ${eventKey}`);
+    await this.webhookService.handleEvent(eventKey, payload);
     return { status: 'success' };
   }
 }
