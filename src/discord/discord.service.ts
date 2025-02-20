@@ -49,6 +49,18 @@ export class DiscordService implements OnModuleInit {
             description: message.description,
             url: message.url,
             color: message.color || 0x0099ff,
+            footer: message.footer && {
+              text: message.footer.text,
+              icon_url: message.footer.iconUrl,
+            },
+            timestamp: message.timestamp,
+            thumbnail: message.thumbnail,
+            author: message.author && {
+              name: message.author.name,
+              icon_url: message.author.iconUrl,
+              url: message.author.url,
+            },
+            fields: message.fields,
           },
         ],
       });
